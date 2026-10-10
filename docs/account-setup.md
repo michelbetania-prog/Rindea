@@ -3,6 +3,16 @@
 La integración web de registro/login está preparada para Supabase Auth y MySQL.
 Los servicios aún deben crearse y configurarse. No existe acceso de invitado.
 
+El proyecto Supabase seleccionado es `hmdqdqwmxxivzaijkvzt`, con URL
+`https://hmdqdqwmxxivzaijkvzt.supabase.co`. Su configuración pública se guarda
+en el `.env` local ignorado por Git y en el borrador del entorno de Codex.
+Vercel requiere configurar sus propias variables; el `.env` local no se sube.
+También se aceptan los nombres `NEXT_PUBLIC_SUPABASE_URL` y
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` como alternativas en el backend.
+Los helpers `next/headers`, `next/server` y `@supabase/ssr` del tutorial de
+Next.js no se utilizan en este proyecto Expo/Express: el backend ya consume
+Supabase Auth por HTTPS y emite la cookie de sesión del proyecto.
+
 1. Crea un proyecto en [Supabase](https://supabase.com/dashboard).
    Activa el proveedor Email y conserva la confirmación de correo habilitada.
    En URL Configuration define Site URL y el redirect permitido como

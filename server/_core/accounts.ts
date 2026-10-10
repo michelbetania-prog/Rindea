@@ -12,9 +12,10 @@ const credentials = z.object({
 const SESSION_MS = 60 * 60 * 1000;
 
 function settings() {
-  const url = new URL(process.env.SUPABASE_URL || "https://not-configured.invalid");
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-  if (!process.env.SUPABASE_URL || url.protocol !== "https:" || !key || !process.env.DATABASE_URL || new TextEncoder().encode(ENV.cookieSecret).length < 32) {
+  const configuredUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = new URL(configuredUrl || "https://not-configured.invalid");
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!configuredUrl || url.protocol !== "https:" || !key || !process.env.DATABASE_URL || new TextEncoder().encode(ENV.cookieSecret).length < 32) {
     throw new Error("Account services are not configured");
   }
   return { url: url.origin, key };

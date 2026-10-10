@@ -119,6 +119,25 @@ describe("Supabase account authentication", () => {
     } finally { vi.stubEnv("SUPABASE_URL", "https://project.example.com"); }
   });
 
+  it("accepts the public variable names provided by the Supabase tutorial", async () => {
+    vi.stubEnv("SUPABASE_URL", "");
+    vi.stubEnv("SUPABASE_PUBLISHABLE_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.example.com");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "test-public-alias-key");
+    try {
+      provider.mockResolvedValueOnce(Response.json({ user: { id: "user-1" } }));
+      const response = await post("signup", { email, password: "test-password" });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ confirmationRequired: true });
+      expect(provider).toHaveBeenCalledWith("https://project.example.com/auth/v1/signup", expect.objectContaining({ headers: expect.objectContaining({ apikey: "test-public-alias-key" }) }));
+    } finally {
+      vi.stubEnv("SUPABASE_URL", "https://project.example.com");
+      vi.stubEnv("SUPABASE_PUBLISHABLE_KEY", "test-publishable-key");
+      vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+      vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "");
+    }
+  });
+
   it("rejects cookies signed for another application", async () => {
     const token = await new SignJWT({ openId: "supabase:user-1", appId: "another-app", name: email })
       .setProtectedHeader({ alg: "HS256" }).setExpirationTime("1h")
