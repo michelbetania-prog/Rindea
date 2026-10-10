@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { calculatePrice, isoDateFromNow } from "@/lib/biem/finance";
 
@@ -163,7 +164,11 @@ export function BiemProvider({ children }: { children: ReactNode }) {
   const updateBusiness = useCallback((profile: Partial<BusinessProfile>) => setData((current) => ({ ...current, business: { ...current.business, ...profile } })), []);
 
   const value = useMemo<BiemStore>(() => ({ ...data, hydrated, upsertProduct, upsertClient, createQuote, updateQuote, duplicateQuote, updateQuoteStatus, setPendingQuoteProduct, updateBusiness }), [createQuote, data, duplicateQuote, hydrated, setPendingQuoteProduct, updateBusiness, updateQuote, updateQuoteStatus, upsertClient, upsertProduct]);
-  return <BiemContext.Provider value={value}>{children}</BiemContext.Provider>;
+  return <BiemContext.Provider value={value}>{hydrated ? children : <HydrationScreen />}</BiemContext.Provider>;
+}
+
+function HydrationScreen() {
+  return <View style={storeStyles.loading}><View style={storeStyles.loadingMark}><ActivityIndicator color="#087DBB" /><Text style={storeStyles.loadingWord}>BIEM</Text></View><Text style={storeStyles.loadingTitle}>Preparando tu espacio comercial</Text><Text style={storeStyles.loadingText}>Cargando tus cotizaciones y preferencias guardadas.</Text></View>;
 }
 
 export function useBiem() {
@@ -171,3 +176,11 @@ export function useBiem() {
   if (!store) throw new Error("useBiem debe usarse dentro de BiemProvider");
   return store;
 }
+
+const storeStyles = StyleSheet.create({
+  loading: { flex: 1, backgroundColor: "#F6F9FC", alignItems: "center", justifyContent: "center", padding: 32, gap: 9 },
+  loadingMark: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 13, paddingVertical: 10, borderRadius: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D9E2EC" },
+  loadingWord: { color: "#087DBB", fontSize: 13, fontWeight: "900", letterSpacing: 0.8 },
+  loadingTitle: { color: "#172B49", fontSize: 16, fontWeight: "900", marginTop: 4 },
+  loadingText: { color: "#64778E", fontSize: 12, textAlign: "center" },
+});

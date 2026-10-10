@@ -12,6 +12,7 @@ export default function BusinessScreen() {
   const [clientDraft, setClientDraft] = useState<ClientDraft>(emptyClientDraft);
   const [saved, setSaved] = useState(false);
   const [clientSaved, setClientSaved] = useState("");
+  const [toolsOpen, setToolsOpen] = useState(false);
 
   function save() {
     updateBusiness(draft);
@@ -45,10 +46,16 @@ export default function BusinessScreen() {
         </View>
         <Text style={businessStyles.lead}>Configura tu negocio; el catálogo y los clientes son opcionales.</Text>
 
-        <Surface style={businessStyles.catalogCard}>
-          <View style={businessStyles.catalogIcon}><MaterialCommunityIcons name="package-variant-closed" size={21} color={biemColors.cyan} /></View>
-          <View style={businessStyles.catalogCopy}><Text style={businessStyles.catalogTitle}>Productos y servicios</Text><Text style={businessStyles.catalogText}>{products.length} elementos guardados para reutilizar.</Text></View>
-          <Pressable onPress={() => router.push("/calculadora")}><Text style={businessStyles.catalogLink}>Abrir</Text></Pressable>
+        <Surface style={businessStyles.toolsCard}>
+          <Pressable onPress={() => setToolsOpen((current) => !current)} style={businessStyles.toolsToggle}>
+            <View style={businessStyles.catalogIcon}><MaterialCommunityIcons name="view-grid-plus-outline" size={21} color={biemColors.cyan} /></View>
+            <View style={businessStyles.catalogCopy}><Text style={businessStyles.catalogTitle}>Más herramientas</Text><Text style={businessStyles.catalogText}>Catálogo y reportes comerciales.</Text></View>
+            <MaterialCommunityIcons name={toolsOpen ? "chevron-up" : "chevron-down"} size={20} color={biemColors.muted} />
+          </Pressable>
+          {toolsOpen ? <View style={businessStyles.toolsList}>
+            <Pressable onPress={() => router.push("/calculadora")} style={businessStyles.toolItem}><View style={businessStyles.toolItemIcon}><MaterialCommunityIcons name="package-variant-closed" size={17} color={biemColors.cyan} /></View><View style={businessStyles.toolItemCopy}><Text style={businessStyles.toolItemTitle}>Productos y servicios</Text><Text style={businessStyles.toolItemText}>{products.length} elementos guardados para reutilizar.</Text></View><Text style={businessStyles.catalogLink}>Abrir</Text></Pressable>
+            <Pressable onPress={() => router.push("/reportes")} style={businessStyles.toolItem}><View style={businessStyles.toolItemIcon}><MaterialCommunityIcons name="chart-box-outline" size={17} color={biemColors.violet} /></View><View style={businessStyles.toolItemCopy}><Text style={businessStyles.toolItemTitle}>Reportes</Text><Text style={businessStyles.toolItemText}>Actividad y oportunidades reales.</Text></View><Text style={businessStyles.catalogLink}>Abrir</Text></Pressable>
+          </View> : null}
         </Surface>
 
         <Surface style={businessStyles.identityCard}>
@@ -173,7 +180,14 @@ const businessStyles = StyleSheet.create({
   formCard: { gap: 11 },
   fieldWrap: { gap: 6 },
   fieldLabel: { color: biemColors.muted, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.7, fontWeight: "800" },
-  catalogCard: { padding: 13, flexDirection: "row", alignItems: "center", gap: 10 },
+  toolsCard: { padding: 0, overflow: "hidden" },
+  toolsToggle: { minHeight: 64, padding: 13, flexDirection: "row", alignItems: "center", gap: 10 },
+  toolsList: { borderTopWidth: 1, borderTopColor: biemColors.line, padding: 10, gap: 8 },
+  toolItem: { minHeight: 54, paddingHorizontal: 3, flexDirection: "row", alignItems: "center", gap: 9 },
+  toolItemIcon: { width: 34, height: 34, borderRadius: 11, backgroundColor: biemColors.surfaceSoft, alignItems: "center", justifyContent: "center" },
+  toolItemCopy: { flex: 1, gap: 2 },
+  toolItemTitle: { color: biemColors.text, fontSize: 12, fontWeight: "900" },
+  toolItemText: { color: biemColors.muted, fontSize: 10 },
   catalogIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: biemColors.cyanSoft, alignItems: "center", justifyContent: "center" },
   catalogCopy: { flex: 1, gap: 2 },
   catalogTitle: { color: biemColors.text, fontSize: 13, fontWeight: "900" },

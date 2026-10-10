@@ -1,29 +1,42 @@
 # Especificación de marca — BIEM Cotiza
 
-## Dirección actualizada
-**Control Claro** — una herramienta móvil de gestión comercial para emprendedores: superficies blancas, jerarquía editorial y acentos azules que hacen que cotizar sea rápido, comprensible y profesional.
+## Dirección de producto
+
+**Control Comercial Claro** — una plataforma SaaS para emprendedores que convierte la cotización y el seguimiento en una secuencia legible de decisiones: crear, enviar, aprobar y completar.
 
 ## Design Read
-- **Artefacto:** aplicación móvil React Native / Expo para cálculo de precios y creación de cotizaciones.
-- **Audiencia:** emprendedores y pequeños negocios que necesitan defender su margen y enviar propuestas profesionales con rapidez.
-- **Lenguaje visual:** espacio de trabajo comercial claro, editorial y táctil; no bancario.
-- **Modo:** greenfield.
-- **Diales:** variación visual 4, movimiento 3, densidad 6, dependencia de activos 2, fidelidad de marca 8.
+
+| Variable | Decisión |
+| --- | --- |
+| Artefacto | Aplicación Expo/React Native responsive para cotizaciones, clientes, catálogo y seguimiento comercial. |
+| Audiencia | Emprendedores y pequeños negocios que necesitan vender con claridad sin operar un sistema administrativo complejo. |
+| Modo | Rediseño · Preservación: rutas, datos, lógica de negocio, PDF, compartición y persistencia se mantienen. |
+| Lenguaje visual | SaaS B2B de arquitectura informativa, sobrio, táctil y con una jerarquía editorial clara. |
+| Diales | Variación 4, movimiento 3, densidad 7, activos 2, fidelidad 9. |
 
 ## Sistema visual
-- **Color firma:** azul glacial `#38BDF8`, utilizado para cifras clave, estados accionables y el sello BIEM.
-- **Base:** blanco `#FFFFFF`, gris niebla `#F4F7FA` y azul tinta `#16263D` para legibilidad y confianza.
-- **Contraste cálido:** ámbar `#9A6500` para alertas de margen, vencimientos y acciones de revisión.
-- **Tipografía:** IBM Plex Sans (si está disponible en el sistema nativo se sustituye por pesos de sistema); la jerarquía se obtiene con números grandes, espaciado editorial y etiquetas en versales.
-- **Layout:** una columna operativa con un panel de control superior, módulos apilados y navegación inferior de cuatro destinos.
-- **Motivos:** línea de cálculo azul, cápsulas de estado, superficies de documento y botones de acción visibles.
-- **Movimiento:** transiciones de 160–220 ms para cambios de estado; respeto a reducción de movimiento; sin animación decorativa continua.
+
+- **Azul firma:** `#087DBB`; comunica acción, claridad y progreso comercial.
+- **Azul oscuro:** `#172B49`; se reserva para lectura primaria, rail de ayuda y estructura.
+- **Base:** `#F6F9FC`, blanco `#FFFFFF` y borde `#D9E2EC`; preservan aire y confianza.
+- **Estados:** pendiente en ámbar, aprobada en verde, completada en violeta, cancelada/rechazada en rojo.
+- **Tipografía:** jerarquía equivalente a Inter mediante fuentes nativas y pesos fuertes; títulos compactos, cuerpo legible y etiquetas de 10–11 px con espaciado medido.
+- **Superficies:** tarjetas blancas, radios de 12–18 px, borde fino y sombra muy discreta.
+- **Iconografía:** Lucide para navegación y utilidades de la capa SaaS; iconos nativos existentes donde Expo los integra directamente.
+
+## Layout e interacción
+
+- En escritorio, rail lateral estable con siete destinos y barra superior con búsqueda, notificaciones y perfil.
+- En móvil, navegación inferior fija con Inicio, Nueva, Cotizaciones, Clientes y Configuración; catálogo y reportes viven en el menú de herramientas secundarias.
+- El banner de oportunidad se mantiene bajo, con degradado azul suave, CTA blanco y una miniatura documental solo en escritorio; en móvil prevalece la lectura.
+- Las transiciones se limitan a presión y cambios de estado de 160–220 ms. No hay movimiento decorativo continuo.
 
 ## Identidad
-- **Esencia:** BIEM Cotiza permite resolver una cotización en minutos y luego ordenar clientes, catálogo y seguimiento.
-- **Personalidad:** precisa, segura, cercana.
-- **Voz:** directa y tranquilizadora.
-  - “Tu precio protege el margen.”
-  - “Listo para convertirlo en una cotización.”
-- **Marca gráfica:** monograma geométrico BIEM: una hoja comercial azul en diagonal intersectada por una línea de cálculo clara sobre fondo tinta.
-- **Activo nativo:** `assets/images/icon.png` y sus variantes adaptativas; se genera como marca cuadrada sin esquinas redondeadas integradas.
+
+- **Esencia:** BIEM Cotiza ayuda a vender, ordenar propuestas y dar seguimiento sin fricción.
+- **Personalidad:** precisa, confiable, cercana.
+- **Voz:** directa y orientada a avance.
+  - “Crea una cotización en minutos.”
+  - “Tus propuestas abiertas, en un solo lugar.”
+- **Marca gráfica:** se conserva el sello documental BIEM existente: hoja comercial azul y línea de cálculo.
+- **Activos nativos:** `assets/images/icon.png` y sus variantes adaptativas; el icono se mantiene como marca cuadrada sin esquinas redondeadas integradas.
