@@ -106,10 +106,16 @@ y **Other** como framework. La configuración versionada define el comando de
 compilación y el directorio de salida; elimina cualquier override antiguo que
 apunte a `public` y vuelve a desplegar el último commit.
 
-Este despliegue sirve el frontend estático. El servidor Express requiere un
-despliegue separado; configura `EXPO_PUBLIC_API_BASE_URL` con su origen HTTPS
-antes de compilar la web. El login sigue requiriendo la migración de Manus OAuth
-y la configuración del backend descritas a continuación.
+El frontend estático se acompaña de una función Vercel en `api/[...path].ts`
+que sirve Express bajo `/api/*`, sin abrir un puerto. Comprueba `/api/health`
+después del despliegue: debe devolver JSON con `ok: true`.
+Configura `APP_PUBLIC_ORIGIN` con el origen HTTPS exacto de la web (sin barra
+final) para CORS y la redirección posterior al login. Deja
+`EXPO_PUBLIC_API_BASE_URL` sin definir para usar el API del mismo dominio;
+si despliegas el API por separado, define esta variable antes de compilar.
+El login sigue requiriendo la migración de Manus OAuth, un secreto de sesión
+y MySQL: publicar el API no sustituye esos requisitos. Introduce las
+credenciales en las variables de entorno de Vercel, nunca en Git.
 
 ## Autenticación fuera de Manus
 

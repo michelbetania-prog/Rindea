@@ -6,7 +6,7 @@ LOOPBACK_IPS.addSubnet("127.0.0.0", 8, "ipv4");
 LOOPBACK_IPS.addAddress("::1", "ipv6");
 LOOPBACK_IPS.addSubnet("::ffff:127.0.0.0", 104, "ipv6");
 
-function configuredOrigin(name: "EXPO_PACKAGER_PROXY_URL" | "EXPO_WEB_PREVIEW_URL"): string | null {
+function configuredOrigin(name: "APP_PUBLIC_ORIGIN" | "EXPO_PACKAGER_PROXY_URL" | "EXPO_WEB_PREVIEW_URL"): string | null {
   const value = process.env[name];
   if (!value) return null;
   try {
@@ -31,9 +31,10 @@ export function trustedExpoWebOrigins(): Set<string> {
   const origins = new Set<string>();
   const packager = configuredOrigin("EXPO_PACKAGER_PROXY_URL");
   const preview = configuredOrigin("EXPO_WEB_PREVIEW_URL");
+  const production = configuredOrigin("APP_PUBLIC_ORIGIN");
   // Loopback origins are request-local below. Never put one in this process-wide set: the
   // same starter can also be reached through a remote API host.
-  for (const configured of [packager, preview]) {
+  for (const configured of [packager, preview, production]) {
     if (configured && !originHasLoopbackHostname(configured)) origins.add(configured);
   }
   // Backward-compatible production fallback while every runtime starts injecting the explicit
