@@ -1,0 +1,56 @@
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+
+import { BiemScreen, IconButton, PrimaryButton, SectionTitle, Surface, Tag, biemColors } from "@/components/biem-ui";
+import { formatDate, formatMoney } from "@/lib/biem/finance";
+import { useBiem, type Quote, type QuoteStatus } from "@/lib/biem/store";
+
+const filters: ("Todas" | QuoteStatus)[] = ["Todas", "Borrador", "Enviada", "Aprobada", "Completada", "Rechazada", "Cancelada"];
+const dateFilters = ["Todas las fechas", "Este mes", "Vencen pronto"] as const;
+
+export default function HistoryScreen() {
+  const { quotes, updateQuoteStatus, duplicateQuote } = useBiem();
+  const [filter, setFilter] = useState<(typeof filters)[number]>("Todas");
+  const [dateFilter, setDateFilter] = useState<(typeof dateFilters)[number]>("Todas las fechas");
+  const [openStatusId, setOpenStatusId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const visibleQuotes = useMemo(() => {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const inSevenDays = new Date(today); inSevenDays.setDate(inSevenDays.getDate() + 7);
+    return quotes.filter((quote) => {
+      const matchesStatus = filter === "Todas" || quote.status === filter;
+      const validDate = new Date(quote.validUntil); validDate.setHours(0, 0, 0, 0);
+      const matchesDate = dateFilter === "Todas las fechas" || (dateFilter === "Este mes" && quote.issuedAt.startsWith(currentMonth)) || (dateFilter === "Vencen pronto" && validDate >= today && validDate <= inSevenDays);
+      return matchesStatus && matchesDate;
+    });
+  }, [dateFilter, filter, quotes]);
+
+  function editQuote(quote: Quote) { router.push({ pathname: "/cotizaciones", params: { edit: quote.id } }); }
+  function setStatus(quote: Quote, status: QuoteStatus) { updateQuoteStatus(quote.id, status); setOpenStatusId(null); setFeedback(`${quote.number} ahora está ${status.toLowerCase()}.`); }
+
+  return <BiemScreen><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={historyStyles.content}>
+    <View style={historyStyles.header}><View><Text style={historyStyles.eyebrow}>ACTIVIDAD COMERCIAL</Text><Text style={historyStyles.title}>Mis cotizaciones</Text></View><IconButton icon="file-plus-outline" label="Nueva cotización" onPress={() => router.push("/cotizaciones")} /></View>
+    <Text style={historyStyles.lead}>Consulta, edita y actualiza cada propuesta hasta convertirla en trabajo realizado.</Text>
+    <View style={historyStyles.filterScroll}>{filters.map((item) => <Pressable key={item} onPress={() => setFilter(item)} style={[historyStyles.filterChip, filter === item && historyStyles.filterChipActive]}><Text style={[historyStyles.filterText, filter === item && historyStyles.filterTextActive]}>{item}</Text></Pressable>)}</View>
+    <View style={historyStyles.dateFilterRow}><Text style={historyStyles.dateFilterLabel}>Fecha</Text><View style={historyStyles.dateFilterOptions}>{dateFilters.map((item) => <Pressable key={item} onPress={() => setDateFilter(item)} style={[historyStyles.dateFilterChip, dateFilter === item && historyStyles.dateFilterChipActive]}><Text style={[historyStyles.dateFilterText, dateFilter === item && historyStyles.dateFilterTextActive]}>{item}</Text></Pressable>)}</View></View>
+    <SectionTitle title={`${visibleQuotes.length} propuestas`} action={<Text style={historyStyles.sortText}>Más recientes</Text>} />
+    <View style={historyStyles.stack}>{visibleQuotes.map((quote) => <QuoteCard key={quote.id} quote={quote} statusOpen={openStatusId === quote.id} onEdit={() => editQuote(quote)} onDuplicate={() => { duplicateQuote(quote); setFeedback(`${quote.number} fue duplicada como borrador.`); }} onToggleStatus={() => setOpenStatusId((current) => current === quote.id ? null : quote.id)} onSetStatus={(status) => setStatus(quote, status)} />)}</View>
+    {!visibleQuotes.length ? <Surface style={historyStyles.empty}><MaterialCommunityIcons name="file-search-outline" size={28} color={biemColors.muted} /><Text style={historyStyles.emptyTitle}>No hay cotizaciones con esos filtros.</Text><Text style={historyStyles.emptyText}>Crea una nueva propuesta y empieza a registrar tu actividad comercial.</Text><PrimaryButton label="Crear cotización" icon="plus" onPress={() => router.push("/cotizaciones")} compact /></Surface> : null}
+    {feedback ? <Text style={historyStyles.feedback}>{feedback}</Text> : null}
+  </ScrollView></BiemScreen>;
+}
+
+function QuoteCard({ quote, statusOpen, onEdit, onDuplicate, onToggleStatus, onSetStatus }: { quote: Quote; statusOpen: boolean; onEdit: () => void; onDuplicate: () => void; onToggleStatus: () => void; onSetStatus: (status: QuoteStatus) => void }) {
+  const total = quoteTotal(quote);
+  return <Surface style={historyStyles.card}><View style={historyStyles.cardTop}><View style={historyStyles.cardIdentity}><View style={historyStyles.cardIcon}><MaterialCommunityIcons name="file-document-outline" size={19} color={biemColors.cyan} /></View><View><Text style={historyStyles.number}>{quote.number}</Text><Text style={historyStyles.client}>{quote.clientName || "Cliente por definir"}</Text></View></View><Pressable onPress={onToggleStatus}><Tag label={quote.status.toUpperCase()} tone={statusTone(quote.status)} /></Pressable></View><Text style={historyStyles.titleLine} numberOfLines={1}>{quote.title}</Text><View style={historyStyles.metaRow}><Text style={historyStyles.meta}>{quote.items.length} ítem{quote.items.length === 1 ? "" : "s"} · vence {formatDate(quote.validUntil)}</Text><Text style={historyStyles.total}>{formatMoney(total)}</Text></View>{statusOpen ? <View style={historyStyles.statusMenu}><Text style={historyStyles.statusMenuLabel}>Actualizar estado</Text><View style={historyStyles.statusOptions}>{(["Borrador", "Enviada", "Aprobada", "Completada", "Rechazada", "Cancelada"] as QuoteStatus[]).map((status) => <Pressable key={status} onPress={() => onSetStatus(status)} style={[historyStyles.statusOption, quote.status === status && historyStyles.statusOptionActive]}><Text style={[historyStyles.statusOptionText, quote.status === status && historyStyles.statusOptionTextActive]}>{status}</Text></Pressable>)}</View></View> : null}<View style={historyStyles.actions}><Pressable onPress={onEdit} style={historyStyles.action}><MaterialCommunityIcons name="pencil-outline" size={15} color={biemColors.cyan} /><Text style={historyStyles.actionText}>Editar</Text></Pressable><Pressable onPress={onDuplicate} style={historyStyles.action}><MaterialCommunityIcons name="content-copy" size={15} color={biemColors.muted} /><Text style={historyStyles.actionText}>Duplicar</Text></Pressable><Text style={historyStyles.statusHint}>Toca el estado para cambiarlo</Text></View></Surface>;
+}
+
+function quoteTotal(quote: Quote) { const subtotal = quote.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0); const discounted = subtotal * (1 - quote.discount / 100); const tax = quote.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity * (1 - quote.discount / 100) * item.taxRate) / 100, 0); return discounted + tax; }
+function statusTone(status: QuoteStatus): "cyan" | "amber" | "green" | "muted" | "red" { return status === "Aprobada" || status === "Completada" ? "green" : status === "Rechazada" || status === "Cancelada" ? "red" : status === "Enviada" ? "amber" : "muted"; }
+
+const historyStyles = StyleSheet.create({
+  content: { padding: 20, paddingBottom: 112, gap: 15 }, header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, eyebrow: { color: biemColors.cyan, fontSize: 10, letterSpacing: 1.6, fontWeight: "900" }, title: { color: biemColors.text, fontSize: 28, lineHeight: 33, fontWeight: "900", letterSpacing: -0.8, marginTop: 3 }, lead: { color: biemColors.muted, fontSize: 14, lineHeight: 20, marginTop: -5 }, filterScroll: { flexDirection: "row", gap: 8, flexWrap: "wrap" }, filterChip: { paddingVertical: 9, paddingHorizontal: 12, borderRadius: 999, backgroundColor: biemColors.surface, borderWidth: 1, borderColor: biemColors.line }, filterChipActive: { backgroundColor: biemColors.cyanSoft, borderColor: biemColors.cyan }, filterText: { color: biemColors.muted, fontSize: 11, fontWeight: "800" }, filterTextActive: { color: biemColors.cyan }, dateFilterRow: { gap: 7 }, dateFilterLabel: { color: biemColors.muted, textTransform: "uppercase", letterSpacing: 0.8, fontSize: 10, fontWeight: "800" }, dateFilterOptions: { flexDirection: "row", gap: 7, flexWrap: "wrap" }, dateFilterChip: { paddingVertical: 7, paddingHorizontal: 10, borderRadius: 10, backgroundColor: biemColors.surfaceSoft }, dateFilterChipActive: { backgroundColor: biemColors.cyanSoft }, dateFilterText: { color: biemColors.muted, fontSize: 10, fontWeight: "800" }, dateFilterTextActive: { color: biemColors.cyan }, sortText: { color: biemColors.muted, fontSize: 11 }, stack: { gap: 10 }, card: { padding: 14, gap: 10 }, cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }, cardIdentity: { flexDirection: "row", alignItems: "center", gap: 10 }, cardIcon: { width: 36, height: 36, borderRadius: 11, backgroundColor: biemColors.cyanSoft, alignItems: "center", justifyContent: "center" }, number: { color: biemColors.cyan, fontSize: 10, fontWeight: "900", letterSpacing: 0.5 }, client: { color: biemColors.text, fontSize: 14, fontWeight: "900", marginTop: 3 }, titleLine: { color: biemColors.text, fontSize: 12, fontWeight: "700" }, metaRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderColor: biemColors.line, paddingTop: 9 }, meta: { color: biemColors.muted, fontSize: 11 }, total: { color: biemColors.text, fontWeight: "900", fontSize: 13 }, statusMenu: { gap: 7, padding: 10, borderRadius: 12, backgroundColor: biemColors.surfaceSoft }, statusMenuLabel: { color: biemColors.muted, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: "800" }, statusOptions: { flexDirection: "row", flexWrap: "wrap", gap: 6 }, statusOption: { backgroundColor: biemColors.surface, borderRadius: 9, paddingVertical: 7, paddingHorizontal: 9, borderColor: biemColors.line, borderWidth: 1 }, statusOptionActive: { backgroundColor: biemColors.cyanSoft, borderColor: biemColors.cyan }, statusOptionText: { color: biemColors.muted, fontSize: 10, fontWeight: "800" }, statusOptionTextActive: { color: biemColors.cyan }, actions: { flexDirection: "row", alignItems: "center", gap: 14 }, action: { flexDirection: "row", alignItems: "center", gap: 4 }, actionText: { color: biemColors.muted, fontSize: 11, fontWeight: "800" }, statusHint: { color: biemColors.muted, fontSize: 9, marginLeft: "auto" }, empty: { alignItems: "center", gap: 10, paddingVertical: 26 }, emptyTitle: { color: biemColors.text, fontSize: 14, fontWeight: "900" }, emptyText: { color: biemColors.muted, fontSize: 12, lineHeight: 17, textAlign: "center", maxWidth: 260 }, feedback: { color: biemColors.green, fontSize: 12, fontWeight: "800", textAlign: "center" },
+});

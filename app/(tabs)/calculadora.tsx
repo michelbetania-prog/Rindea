@@ -76,7 +76,7 @@ export default function CalculatorScreen() {
         <Surface style={calcStyles.catalogCard}>
           <SectionTitle title="Catálogo reutilizable" action={<Tag label={`${products.length} GUARDADOS`} tone="muted" />} />
           <View style={calcStyles.catalogList}>
-            {products.slice(0, 2).map((product) => (
+            {products.map((product) => (
               <Pressable key={product.id} onPress={() => loadProduct(product)} style={[calcStyles.catalogItem, draft.id === product.id && calcStyles.catalogItemActive]}>
                 <View style={calcStyles.catalogCopy}>
                   <Text style={calcStyles.catalogName} numberOfLines={1}>{product.name}</Text>
@@ -144,7 +144,7 @@ export default function CalculatorScreen() {
               </Pressable>
             ))}
           </View>
-          <Text style={[calcStyles.inputLabel, calcStyles.spacedLabel]}>Impuesto incluido</Text>
+          <Text style={[calcStyles.inputLabel, calcStyles.spacedLabel]}>Impuesto aplicable</Text>
           <View style={calcStyles.optionRow}>
             {[0, 5, 19].map((taxRate) => (
               <Pressable key={taxRate} onPress={() => setDraft((current) => ({ ...current, taxRate }))} style={[calcStyles.taxChip, draft.taxRate === taxRate && calcStyles.taxChipActive]}>
@@ -204,7 +204,7 @@ const calcStyles = StyleSheet.create({
   catalogCard: { gap: 7, paddingVertical: 14 },
   catalogList: { gap: 6 },
   catalogItem: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 12, backgroundColor: biemColors.ink, borderColor: biemColors.line, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 8 },
-  catalogItemActive: { borderColor: biemColors.cyan, backgroundColor: "#0E2638" },
+  catalogItemActive: { borderColor: biemColors.cyan, backgroundColor: biemColors.cyanSoft },
   catalogCopy: { flex: 1, gap: 2 },
   catalogName: { color: biemColors.text, fontSize: 12, fontWeight: "800" },
   catalogMeta: { color: biemColors.muted, fontSize: 10 },
@@ -215,7 +215,7 @@ const calcStyles = StyleSheet.create({
   textInput: { minHeight: 48, paddingHorizontal: 13, borderWidth: 1, borderColor: biemColors.line, borderRadius: 14, backgroundColor: biemColors.ink, color: biemColors.text, fontSize: 14, fontWeight: "700" },
   segmentedRow: { flexDirection: "row", gap: 8 },
   segment: { flex: 1, minHeight: 39, borderRadius: 12, justifyContent: "center", alignItems: "center", backgroundColor: biemColors.ink, borderWidth: 1, borderColor: biemColors.line },
-  segmentActive: { backgroundColor: "#0F425B", borderColor: biemColors.cyan },
+  segmentActive: { backgroundColor: biemColors.cyanSoft, borderColor: biemColors.cyan },
   segmentText: { color: biemColors.muted, fontSize: 12, fontWeight: "800" },
   segmentTextActive: { color: biemColors.cyan },
   moneyGrid: { flexDirection: "row", gap: 12 },
@@ -224,7 +224,7 @@ const calcStyles = StyleSheet.create({
   currencyPrefix: { color: biemColors.cyan, fontSize: 16, fontWeight: "900", marginRight: 4 },
   moneyInput: { color: biemColors.text, fontSize: 17, fontWeight: "900", flex: 1, paddingVertical: 8 },
   fieldHint: { color: biemColors.muted, fontSize: 10, lineHeight: 13 },
-  costHint: { backgroundColor: "#102B3B", borderRadius: 12, padding: 10, flexDirection: "row", gap: 7, alignItems: "center" },
+  costHint: { backgroundColor: biemColors.cyanSoft, borderRadius: 12, padding: 10, flexDirection: "row", gap: 7, alignItems: "center" },
   costHintText: { color: biemColors.muted, fontSize: 12, flex: 1 },
   costHintStrong: { color: biemColors.text, fontWeight: "900" },
   marginDisplay: { alignItems: "baseline", flexDirection: "row", gap: 7 },
@@ -232,20 +232,20 @@ const calcStyles = StyleSheet.create({
   marginLabel: { color: biemColors.muted, fontSize: 13 },
   optionRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   optionChip: { minWidth: 56, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: biemColors.ink, borderWidth: 1, borderColor: biemColors.line, alignItems: "center" },
-  optionChipActive: { borderColor: biemColors.cyan, backgroundColor: "#0F425B" },
+  optionChipActive: { borderColor: biemColors.cyan, backgroundColor: biemColors.cyanSoft },
   taxChip: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: biemColors.ink, borderWidth: 1, borderColor: biemColors.line },
-  taxChipActive: { borderColor: biemColors.cyan, backgroundColor: "#0F425B" },
+  taxChipActive: { borderColor: biemColors.cyan, backgroundColor: biemColors.cyanSoft },
   optionText: { color: biemColors.muted, fontSize: 12, fontWeight: "900" },
   optionTextActive: { color: biemColors.cyan },
   resultShell: { position: "relative" },
   resultRail: { position: "absolute", width: 3, backgroundColor: biemColors.cyan, top: 22, bottom: 22, left: 0, zIndex: 2, borderRadius: 9 },
-  resultCard: { gap: 16, padding: 18, borderColor: "#27627B", borderWidth: 1, backgroundColor: "#102334" },
+  resultCard: { gap: 16, padding: 18, borderColor: "#B9E3F5", borderWidth: 1, backgroundColor: biemColors.cyanSoft },
   resultTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   resultKicker: { color: biemColors.muted, fontSize: 10, fontWeight: "900", letterSpacing: 1.1 },
   resultValue: { color: biemColors.cyan, fontSize: 36, fontWeight: "900", letterSpacing: -1.5, marginTop: 3 },
   resultUnit: { color: biemColors.muted, fontSize: 12, marginTop: -2 },
-  breakdown: { paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#285069" },
-  totalLine: { height: 1, backgroundColor: "#285069", marginVertical: 3 },
+  breakdown: { paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#B9E3F5" },
+  totalLine: { height: 1, backgroundColor: "#B9E3F5", marginVertical: 3 },
   directLink: { color: biemColors.muted, fontSize: 11, textAlign: "center", lineHeight: 16, marginTop: -7 },
   notice: { color: biemColors.green, textAlign: "center", fontSize: 12, fontWeight: "800", marginTop: 2 },
 });

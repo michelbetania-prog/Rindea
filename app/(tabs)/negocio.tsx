@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -38,11 +39,17 @@ export default function BusinessScreen() {
         <View style={businessStyles.header}>
           <View>
             <Text style={businessStyles.eyebrow}>TU ESPACIO COMERCIAL</Text>
-            <Text style={businessStyles.title}>Negocio y documento</Text>
+            <Text style={businessStyles.title}>Configuración</Text>
           </View>
           <IconButton icon="cog-outline" label="Opciones de negocio" onPress={() => undefined} />
         </View>
-        <Text style={businessStyles.lead}>Personaliza lo que verá tu cliente al recibir una cotización.</Text>
+        <Text style={businessStyles.lead}>Configura tu negocio; el catálogo y los clientes son opcionales.</Text>
+
+        <Surface style={businessStyles.catalogCard}>
+          <View style={businessStyles.catalogIcon}><MaterialCommunityIcons name="package-variant-closed" size={21} color={biemColors.cyan} /></View>
+          <View style={businessStyles.catalogCopy}><Text style={businessStyles.catalogTitle}>Productos y servicios</Text><Text style={businessStyles.catalogText}>{products.length} elementos guardados para reutilizar.</Text></View>
+          <Pressable onPress={() => router.push("/calculadora")}><Text style={businessStyles.catalogLink}>Abrir</Text></Pressable>
+        </Surface>
 
         <Surface style={businessStyles.identityCard}>
           <View style={businessStyles.identityTop}>
@@ -55,7 +62,7 @@ export default function BusinessScreen() {
           </View>
           <View style={businessStyles.brandStrip}>
             <View style={businessStyles.brandSwatch} />
-            <Text style={businessStyles.brandStripText}>Sello BIEM · Precisión Nocturna</Text>
+            <Text style={businessStyles.brandStripText}>Sello BIEM · Control Claro</Text>
           </View>
         </Surface>
 
@@ -155,17 +162,23 @@ const businessStyles = StyleSheet.create({
   eyebrow: { color: biemColors.cyan, fontSize: 10, letterSpacing: 1.6, fontWeight: "900" },
   title: { color: biemColors.text, fontSize: 27, lineHeight: 33, fontWeight: "900", letterSpacing: -0.8, marginTop: 3 },
   lead: { color: biemColors.muted, fontSize: 14, lineHeight: 20, marginTop: -5 },
-  identityCard: { gap: 15, borderColor: "#27627B", backgroundColor: "#102334" },
+  identityCard: { gap: 15, borderColor: "#B9E3F5", backgroundColor: biemColors.cyanSoft },
   identityTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   identityCopy: { flex: 1, gap: 3 },
   identityName: { color: biemColors.text, fontSize: 17, fontWeight: "900" },
   identityMeta: { color: biemColors.muted, fontSize: 11 },
-  brandStrip: { flexDirection: "row", gap: 8, alignItems: "center", borderTopWidth: 1, borderTopColor: "#285069", paddingTop: 13 },
+  brandStrip: { flexDirection: "row", gap: 8, alignItems: "center", borderTopWidth: 1, borderTopColor: "#B9E3F5", paddingTop: 13 },
   brandSwatch: { width: 27, height: 8, borderRadius: 4, backgroundColor: biemColors.cyan },
   brandStripText: { color: biemColors.muted, fontSize: 11, fontWeight: "700" },
   formCard: { gap: 11 },
   fieldWrap: { gap: 6 },
   fieldLabel: { color: biemColors.muted, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.7, fontWeight: "800" },
+  catalogCard: { padding: 13, flexDirection: "row", alignItems: "center", gap: 10 },
+  catalogIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: biemColors.cyanSoft, alignItems: "center", justifyContent: "center" },
+  catalogCopy: { flex: 1, gap: 2 },
+  catalogTitle: { color: biemColors.text, fontSize: 13, fontWeight: "900" },
+  catalogText: { color: biemColors.muted, fontSize: 11 },
+  catalogLink: { color: biemColors.cyan, fontSize: 12, fontWeight: "900" },
   textInput: { minHeight: 47, paddingHorizontal: 12, borderRadius: 13, borderWidth: 1, borderColor: biemColors.line, backgroundColor: biemColors.ink, color: biemColors.text, fontSize: 13, fontWeight: "700" },
   conditionsInput: { height: 92, paddingTop: 11, lineHeight: 18 },
   pair: { flexDirection: "row", gap: 10 },
@@ -174,11 +187,11 @@ const businessStyles = StyleSheet.create({
   validityCaption: { color: biemColors.muted, fontSize: 10, marginTop: 3 },
   validityControl: { flexDirection: "row", alignItems: "center", gap: 5 },
   validityAction: { width: 28, height: 28, alignItems: "center", justifyContent: "center", borderRadius: 9, backgroundColor: biemColors.surfaceSoft },
-  validityChip: { backgroundColor: "#0F425B", borderRadius: 11, paddingHorizontal: 10, paddingVertical: 8 },
+  validityChip: { backgroundColor: biemColors.cyanSoft, borderRadius: 11, paddingHorizontal: 10, paddingVertical: 8 },
   validityValue: { color: biemColors.cyan, fontSize: 12, fontWeight: "900" },
   clientStack: { gap: 7 },
   clientItem: { minHeight: 49, padding: 9, borderColor: biemColors.line, borderWidth: 1, borderRadius: 13, backgroundColor: biemColors.ink, flexDirection: "row", gap: 9, alignItems: "center" },
-  clientInitial: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#173E57" },
+  clientInitial: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: biemColors.cyanSoft },
   clientInitialText: { color: biemColors.cyan, fontSize: 12, fontWeight: "900" },
   clientCopy: { flex: 1, gap: 2 },
   clientCompany: { color: biemColors.text, fontSize: 12, fontWeight: "900" },
@@ -188,7 +201,7 @@ const businessStyles = StyleSheet.create({
   clientFormHeading: { color: biemColors.text, fontSize: 13, fontWeight: "900", marginTop: 1 },
   clientSaved: { color: biemColors.green, textAlign: "center", fontSize: 11, fontWeight: "800", marginTop: -3 },
   statusCard: { flexDirection: "row", gap: 11, padding: 13, alignItems: "center" },
-  statusIcon: { width: 39, height: 39, borderRadius: 13, justifyContent: "center", alignItems: "center", backgroundColor: "#123D34" },
+  statusIcon: { width: 39, height: 39, borderRadius: 13, justifyContent: "center", alignItems: "center", backgroundColor: "#E1F5EE" },
   statusCopy: { flex: 1, gap: 2 },
   statusTitle: { color: biemColors.text, fontSize: 13, fontWeight: "900" },
   statusText: { color: biemColors.muted, fontSize: 11, lineHeight: 15 },
