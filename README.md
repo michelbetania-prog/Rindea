@@ -98,6 +98,19 @@ pnpm build          # Bundle de servidor Express
 pnpm exec expo export --platform web --output-dir dist/web
 ```
 
+## Despliegue web en Vercel
+
+La configuración de `vercel.json` instala con el lockfile y exporta Expo Web a
+`dist/web`. En Vercel, selecciona la raíz del repositorio como **Root Directory**
+y **Other** como framework. La configuración versionada define el comando de
+compilación y el directorio de salida; elimina cualquier override antiguo que
+apunte a `public` y vuelve a desplegar el último commit.
+
+Este despliegue sirve el frontend estático. El servidor Express requiere un
+despliegue separado; configura `EXPO_PUBLIC_API_BASE_URL` con su origen HTTPS
+antes de compilar la web. El login sigue requiriendo la migración de Manus OAuth
+y la configuración del backend descritas a continuación.
+
 ## Autenticación fuera de Manus
 
 La autenticación actual es **Manus OAuth** y no puede utilizarse fuera de Manus con las credenciales existentes. Antes de operar fuera de Manus, sustituye este flujo por un proveedor externo (OIDC/Auth0, Clerk, Supabase Auth, Better Auth u otro) siguiendo el plan en [`docs/manus-to-codex-migration.md`](docs/manus-to-codex-migration.md).
