@@ -7,6 +7,7 @@ describe("Vercel Express API handler", () => {
   let origin: string;
 
   beforeAll(async () => {
+    vi.stubEnv("AUTH_PROVIDER", "manus");
     vi.stubEnv("APP_PUBLIC_ORIGIN", "https://app.example.com");
     const { default: handler } = await import("../api/index");
     server = createServer(handler);

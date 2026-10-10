@@ -31,7 +31,7 @@ const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserI
 class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
     console.log("[OAuth] Client initialized");
-    if (!ENV.oAuthServerUrl) {
+    if (ENV.authProvider === "manus" && !ENV.oAuthServerUrl) {
       console.error(
         "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable.",
       );
@@ -134,6 +134,7 @@ class SDKServer {
 
   private getSessionSecret() {
     const secret = ENV.cookieSecret;
+    if (new TextEncoder().encode(secret).length < 32) throw new Error("Session secret must contain at least 32 bytes");
     return new TextEncoder().encode(secret);
   }
 
@@ -194,6 +195,7 @@ class SDKServer {
         console.warn("[Auth] Session payload missing required fields");
         return null;
       }
+      if (appId !== ENV.appId) return null;
 
       return {
         openId,
@@ -243,7 +245,7 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
-    if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
+    if (ENV.authProvider === "manus" && session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
       const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
       const taskUid = userInfo.taskUid ?? null;
       if (!taskUid) {
@@ -257,7 +259,7 @@ class SDKServer {
     let user = await db.getUserByOpenId(sessionUserId);
 
     // If user not in DB, sync from OAuth server automatically
-    if (!user) {
+    if (!user && ENV.authProvider === "manus") {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
         await db.upsertUser({

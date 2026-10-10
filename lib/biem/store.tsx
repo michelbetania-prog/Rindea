@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { calculatePrice, isoDateFromNow } from "@/lib/biem/finance";
+import { AccountWorkspaceContext } from "@/lib/account-workspace";
 
 export type Product = {
   id: string;
@@ -118,19 +119,22 @@ const initialData: StoreData = {
 const BiemContext = createContext<BiemStore | null>(null);
 
 export function BiemProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<StoreData>(initialData);
+  const workspaceId = useContext(AccountWorkspaceContext);
+  const storageKey = workspaceId ? `${STORAGE_KEY}:workspace:${workspaceId}` : null;
+  const [data, setData] = useState<StoreData>({ ...initialData, products: [], clients: [], quotes: [], business: { name: "Mi negocio", owner: "", logoUrl: "", email: "", phone: "", city: "", conditions: "", validityDays: 10 } });
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
+    if (!storageKey) { setHydrated(true); return; }
+    AsyncStorage.getItem(storageKey).then((saved) => {
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<StoreData>;
-        setData({ ...initialData, ...parsed, products: parsed.products ?? initialData.products, clients: parsed.clients ?? initialData.clients, quotes: parsed.quotes ?? initialData.quotes, business: { ...initialData.business, ...parsed.business } });
+        setData((current) => ({ ...current, ...parsed, products: parsed.products ?? [], clients: parsed.clients ?? [], quotes: parsed.quotes ?? [], business: { ...current.business, ...parsed.business } }));
       }
     }).catch(() => undefined).finally(() => setHydrated(true));
-  }, []);
+  }, [storageKey]);
 
-  useEffect(() => { if (hydrated) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => undefined); }, [data, hydrated]);
+  useEffect(() => { if (hydrated && storageKey) AsyncStorage.setItem(storageKey, JSON.stringify(data)).catch(() => undefined); }, [data, hydrated, storageKey]);
 
   const upsertProduct = useCallback((input: Omit<Product, "id" | "netPrice" | "suggestedPrice" | "updatedAt"> & { id?: string }) => {
     const product = productFromInput(input);

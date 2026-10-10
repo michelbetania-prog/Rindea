@@ -113,13 +113,29 @@ Configura `APP_PUBLIC_ORIGIN` con el origen HTTPS exacto de la web (sin barra
 final) para CORS y la redirección posterior al login. Deja
 `EXPO_PUBLIC_API_BASE_URL` sin definir para usar el API del mismo dominio;
 si despliegas el API por separado, define esta variable antes de compilar.
-El login sigue requiriendo la migración de Manus OAuth, un secreto de sesión
-y MySQL: publicar el API no sustituye esos requisitos. Introduce las
+El login usa Supabase Auth y requiere un secreto de sesión y MySQL;
+publicar el API no sustituye esos requisitos. Introduce las
 credenciales en las variables de entorno de Vercel, nunca en Git.
 
 ## Autenticación fuera de Manus
 
-La autenticación actual es **Manus OAuth** y no puede utilizarse fuera de Manus con las credenciales existentes. Antes de operar fuera de Manus, sustituye este flujo por un proveedor externo (OIDC/Auth0, Clerk, Supabase Auth, Better Auth u otro) siguiendo el plan en [`docs/manus-to-codex-migration.md`](docs/manus-to-codex-migration.md).
+El acceso web usa **Supabase Auth** con correo y contraseña, confirmación de
+correo y una sesión propia de una hora en cookie HttpOnly. El backend verifica
+la identidad contra Supabase y guarda `supabase:<id>` en `users.openId`, después
+aprovisiona el workspace antes de emitir la cookie. Los endpoints de Manus solo
+se registran con `AUTH_PROVIDER=manus` para compatibilidad con la exportación.
+La nueva pantalla web no utiliza ese flujo.
+
+Sigue [Configurar cuentas reales](docs/account-setup.md) para crear los servicios,
+aplicar las migraciones existentes y configurar Vercel. Sin esos servicios el
+acceso devuelve un error de configuración y no crea una sesión. Esta integración
+web requiere validación contra tus servicios reales antes de considerarse lista.
+
+Los datos comerciales siguen en el navegador, ahora separados por workspace.
+Los datos anteriores de `biem-cotiza-state-v1` se conservan, sin importarlos
+automáticamente en una cuenta. La sincronización de catálogo, clientes y
+cotizaciones con MySQL sigue pendiente de Fase 2. La autenticación nativa de
+Expo requiere una adaptación posterior; este cambio prepara el acceso web.
 
 La regla que debe preservarse es:
 
@@ -140,7 +156,7 @@ El commit `58f3239` contiene la última mejora funcional confirmada de Fase 1. L
 Para empezar Fase 2 en Codex:
 
 1. Lee `docs/manus-to-codex-migration.md` y `docs/multiuser-sync-architecture.md`.
-2. Reemplaza Manus OAuth y configura MySQL externo en un entorno aislado.
+2. Configura Supabase Auth y MySQL externo en un entorno aislado.
 3. Implementa repositorios y routers tRPC por workspace para productos, clientes, cotizaciones, ítems y perfil comercial.
 4. Cambia `lib/biem/store.tsx` para que consulte y mutacione el API, conservando `AsyncStorage` únicamente como fuente de migración voluntaria y respaldo local temporal.
 5. Implementa la vista previa, importación idempotente y reanudable de datos locales sin importar las muestras `initialData`.
