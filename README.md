@@ -116,7 +116,7 @@ git log --oneline --all
 git checkout 58f3239
 ```
 
-El commit `58f3239` contiene la última mejora funcional confirmada de Fase 1. El commit de documentación de exportación posterior solo añade archivos de handoff y no altera la lógica de la aplicación.
+El commit `58f3239` contiene la última mejora funcional confirmada de Fase 1. Los commits posteriores de handoff añaden documentación y corrigen una compatibilidad de tipos de Expo Router detectada al instalar el proyecto desde cero; no modifican la lógica comercial ni los datos.
 
 Para empezar Fase 2 en Codex:
 

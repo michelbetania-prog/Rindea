@@ -61,7 +61,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
     </BiemProvider>
   );
-  const isOAuthCallback = segments[0] === "oauth" && segments[1] === "callback";
+  const isOAuthCallback = segments.join("/") === "oauth/callback";
 
   const app = (
     <GestureHandlerRootView style={{ flex: 1 }}>
