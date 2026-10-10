@@ -106,7 +106,7 @@ y **Other** como framework. La configuración versionada define el comando de
 compilación y el directorio de salida; elimina cualquier override antiguo que
 apunte a `public` y vuelve a desplegar el último commit.
 
-El frontend estático se acompaña de una función Vercel en `api/[...path].ts`
+El frontend estático se acompaña de una función Vercel en `api/index.ts`
 que sirve Express bajo `/api/*`, sin abrir un puerto. Comprueba `/api/health`
 después del despliegue: debe devolver JSON con `ok: true`.
 Configura `APP_PUBLIC_ORIGIN` con el origen HTTPS exacto de la web (sin barra
