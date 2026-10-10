@@ -108,15 +108,15 @@ export const getLoginUrl = () => {
  * @returns Always null, the callback is handled via deep link.
  */
 export async function startOAuthLogin(): Promise<string | null> {
-  const loginUrl = getLoginUrl();
-
   if (ReactNative.Platform.OS === "web") {
-    // On web, just redirect
+    // The API creates a short-lived nonce cookie before redirecting to Manus OAuth.
     if (typeof window !== "undefined") {
-      window.location.href = loginUrl;
+      window.location.href = `${getApiBaseUrl()}/api/oauth/start`;
     }
     return null;
   }
+
+  const loginUrl = getLoginUrl();
 
   const supported = await Linking.canOpenURL(loginUrl);
   if (!supported) {

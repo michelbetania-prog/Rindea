@@ -39,8 +39,14 @@ class OAuthService {
   }
 
   private decodeState(state: string): string {
-    const redirectUri = atob(state);
-    return redirectUri;
+    const decoded = atob(state);
+    try {
+      const parsed = JSON.parse(decoded) as { redirectUri?: unknown };
+      if (typeof parsed.redirectUri === "string") return parsed.redirectUri;
+    } catch {
+      // Mobile callbacks from the existing client encode only the redirect URI.
+    }
+    return decoded;
   }
 
   async getTokenByCode(code: string, state: string): Promise<ExchangeTokenResponse> {

@@ -1,28 +1,25 @@
 import { parse as parseCookieHeader } from "cookie";
 import type { CookieOptions, Request, RequestHandler } from "express";
-import {
-  LEGACY_COOKIE_NAME,
-  SESSION_COOKIE_SUFFIX,
-} from "../../shared/const.js";
+
+import { LEGACY_COOKIE_NAME } from "../../shared/const.js";
+
+export const WEB_SESSION_COOKIE_NAME = "webdev_app_session";
+const OAUTH_STATE_COOKIE_NAME = "biem_oauth_state";
 
 function isSecureRequest(req: Request) {
   if (req.protocol === "https") return true;
-
   const forwardedProto = req.headers["x-forwarded-proto"];
   if (!forwardedProto) return false;
-
   const protoList = Array.isArray(forwardedProto) ? forwardedProto : forwardedProto.split(",");
-
   return protoList.some((proto) => proto.trim().toLowerCase() === "https");
 }
 
-export function getSessionCookieOptions(
-  req: Request,
-): Pick<CookieOptions, "httpOnly" | "path" | "sameSite" | "secure"> {
+export function getSessionCookieOptions(req: Request): Pick<CookieOptions, "httpOnly" | "path" | "sameSite" | "secure"> {
   const secure = isSecureRequest(req);
   return {
     httpOnly: true,
     path: "/",
+    // Preview is cross-site HTTPS. Production can safely preserve this stricter eligible setting.
     sameSite: secure ? "none" : "lax",
     secure,
   };
@@ -47,15 +44,16 @@ function legacyParentDomain(hostname: string): string | null {
   return `.${normalized.split(".").slice(-2).join(".")}`;
 }
 
-export function getSessionCookieName(req: Request): string {
-  return isSecureRequest(req)
-    ? `__Host-manus_session_${SESSION_COOKIE_SUFFIX}`
-    : `manus_local_session_${SESSION_COOKIE_SUFFIX}`;
+export function getSessionCookieName(_req: Request): string {
+  // Preview auto-login requires this exact application-owned cookie name.
+  return WEB_SESSION_COOKIE_NAME;
 }
 
-export function getLegacySessionCookieOptions(
-  req: Request,
-): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
+export function getOAuthStateCookieName(): string {
+  return OAUTH_STATE_COOKIE_NAME;
+}
+
+export function getLegacySessionCookieOptions(req: Request): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
   const secure = isSecureRequest(req);
   return {
     domain: legacyParentDomain(req.hostname) ?? undefined,
@@ -73,7 +71,15 @@ export function clearLegacySessionCookie(): RequestHandler {
   };
 }
 
-export function currentSessionCookie(req: Request): string | undefined {
+function cookieValue(req: Request, name: string): string | undefined {
   if (!req.headers.cookie) return undefined;
-  return parseCookieHeader(req.headers.cookie)[getSessionCookieName(req)];
+  return parseCookieHeader(req.headers.cookie)[name];
+}
+
+export function currentSessionCookie(req: Request): string | undefined {
+  return cookieValue(req, getSessionCookieName(req));
+}
+
+export function currentOAuthStateCookie(req: Request): string | undefined {
+  return cookieValue(req, getOAuthStateCookieName());
 }

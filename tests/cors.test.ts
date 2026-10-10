@@ -7,6 +7,7 @@ import {
   trustedExpoWebOrigins,
 } from "../server/_core/cors";
 import {
+  WEB_SESSION_COOKIE_NAME,
   clearLegacySessionCookie,
   currentSessionCookie,
   getLegacySessionCookieOptions,
@@ -209,10 +210,7 @@ describe("Mobile API origin and cookie isolation", () => {
     } as Request;
     const currentName = getSessionCookieName(request);
     const tossableParentName = `manus_session_${SESSION_COOKIE_SUFFIX}`;
-    expect(currentName.startsWith("__Host-")).toBe(true);
-    expect(
-      getSessionCookieName({ ...request, protocol: "http" } as Request),
-    ).toBe(`manus_local_session_${SESSION_COOKIE_SUFFIX}`);
+    expect(currentName).toBe(WEB_SESSION_COOKIE_NAME);
     for (const cookie of [
       `${LEGACY_COOKIE_NAME}=legacy-token; ${currentName}=current-project-token`,
       `${tossableParentName}=attacker-token; ${currentName}=current-project-token`,
