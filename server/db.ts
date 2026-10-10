@@ -1,6 +1,8 @@
 import { and, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 import {
   businessProfiles,
@@ -21,7 +23,19 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const url = new URL(process.env.DATABASE_URL);
+      if (!["postgres:", "postgresql:"].includes(url.protocol)) throw new Error("DATABASE_URL must use PostgreSQL");
+      const local = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+      _db = drizzle(postgres(process.env.DATABASE_URL, {
+        prepare: false, // Required by the Supabase transaction pooler.
+        max: 3,
+        connect_timeout: 10,
+        idle_timeout: 20,
+        ssl: local ? false : {
+          rejectUnauthorized: true,
+          ...(process.env.PGSSLROOTCERT ? { ca: readFileSync(process.env.PGSSLROOTCERT, "utf8") } : {}),
+        },
+      }));
     } catch {
       console.warn("[Database] Failed to connect");
       _db = null;
@@ -66,7 +80,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
   } catch (error) {
     console.error("[Database] Failed to upsert user");
     throw error;
@@ -121,7 +135,7 @@ export async function getOrCreatePersonalWorkspace(user: User): Promise<Workspac
       name: businessName,
       personalForUserId: user.id,
       createdByUserId: user.id,
-    }).onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+    }).onConflictDoUpdate({ target: workspaces.personalForUserId, set: { updatedAt: new Date() } });
 
     const [workspace] = await tx.select().from(workspaces).where(eq(workspaces.personalForUserId, user.id)).limit(1);
     if (!workspace) throw new Error("Workspace provisioning failed");
@@ -131,7 +145,7 @@ export async function getOrCreatePersonalWorkspace(user: User): Promise<Workspac
       userId: user.id,
       role: "owner",
       status: "active",
-    }).onDuplicateKeyUpdate({ set: { role: "owner", status: "active", updatedAt: new Date() } });
+    }).onConflictDoNothing({ target: [workspaceMembers.workspaceId, workspaceMembers.userId] });
 
     await tx.insert(businessProfiles).values({
       workspaceId: workspace.id,
@@ -139,10 +153,10 @@ export async function getOrCreatePersonalWorkspace(user: User): Promise<Workspac
       ownerName,
       createdByUserId: user.id,
       updatedByUserId: user.id,
-    }).onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+    }).onConflictDoNothing({ target: businessProfiles.workspaceId });
 
     await tx.insert(workspaceSequences).values({ workspaceId: workspace.id, nextQuoteNumber: 1 })
-      .onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+      .onConflictDoNothing({ target: workspaceSequences.workspaceId });
   });
 
   const created = await db

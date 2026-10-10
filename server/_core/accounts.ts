@@ -58,7 +58,7 @@ export function registerAccountRoutes(app: Express) {
     res.setHeader("Cache-Control", "no-store");
     const parsed = credentials.safeParse(req.body);
     if (!parsed.success) { res.status(400).json({ error: "Introduce un correo válido y una contraseña de entre 8 y 128 caracteres." }); return; }
-    try { settings(); } catch { res.status(503).json({ error: "El acceso con cuentas aún no está configurado. Falta conectar Supabase y MySQL." }); return; }
+    try { settings(); } catch { res.status(503).json({ error: "El acceso con cuentas aún no está configurado. Falta conectar Supabase Auth y PostgreSQL." }); return; }
     try {
       const signup = req.params.action === "signup";
       const path = signup ? "signup" : "token?grant_type=password";

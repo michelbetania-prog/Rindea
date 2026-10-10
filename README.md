@@ -5,8 +5,8 @@
 ## Estado del handoff
 
 - **Base funcional confirmada:** commit [`58f3239`](#continuidad-desde-el-commit-confirmado) — `feat: add secure workspace foundation`.
-- **Fase 1 implementada:** MySQL, usuarios, workspaces personales, membresías, perfil comercial inicial, numeración de cotizaciones, autenticación obligatoria y procedimiento tRPC de workspace.
-- **Fase 2 pendiente:** las pantallas comerciales siguen usando `AsyncStorage` como fuente de datos. Aún no se han creado los routers tRPC ni la persistencia MySQL de catálogo, clientes, cotizaciones, historial y reportes.
+- **Fase 1 implementada:** PostgreSQL/Supabase, usuarios, workspaces personales, membresías, perfil comercial inicial, numeración de cotizaciones, autenticación obligatoria y procedimiento tRPC de workspace.
+- **Fase 2 pendiente:** las pantallas comerciales siguen usando `AsyncStorage` como fuente de datos. Aún no se han creado los routers tRPC ni la persistencia PostgreSQL de catálogo, clientes, cotizaciones, historial y reportes.
 - **Publicación:** no se publicó esta versión. La exportación no incluye datos, contraseñas ni credenciales.
 
 La guía de transición está en [`docs/manus-to-codex-migration.md`](docs/manus-to-codex-migration.md). El inventario de dependencias exclusivas de Manus está en [`docs/manus-dependency-inventory.md`](docs/manus-dependency-inventory.md).
@@ -17,8 +17,8 @@ La guía de transición está en [`docs/manus-to-codex-migration.md`](docs/manus
 app/                 Rutas Expo Router y pantallas React Native/Web
 components/          Sistema visual BIEM y puerta de autenticación
 lib/                 tRPC cliente, estado comercial local y utilidades financieras
-server/              Express, tRPC, autenticación, MySQL y servicios del starter
-drizzle/             Esquema Drizzle, relaciones y migraciones MySQL
+server/              Express, tRPC, autenticación, PostgreSQL y servicios del starter
+drizzle/             Esquema PostgreSQL, migraciones nuevas y archivo histórico MySQL
 assets/images/       Iconos, favicon, splash y recursos de marca
 shared/              Tipos, constantes y errores compartidos
 tests/               Pruebas de cookies, logout y protección de workspace
@@ -30,7 +30,7 @@ El frontend Expo está diseñado para navegador, Android e iOS. El backend es un
 
 - Node.js **22** o superior
 - Corepack y `pnpm` **9.12.0**
-- MySQL **8.0** compatible
+- PostgreSQL **17** compatible (incluido en Supabase)
 - Una solución de autenticación externa antes de habilitar logins fuera de Manus; ver [Autenticación](#autenticación-fuera-de-manus)
 
 ```bash
@@ -56,29 +56,42 @@ cp .env.example .env
 
 Completa **solo** las variables de tu proveedor externo en `.env`; nunca subas ese archivo al repositorio.
 
-## MySQL externo
+## PostgreSQL en Supabase
 
-1. Crea una base de datos y un usuario de aplicación con permisos únicamente sobre esa base.
-2. Define `DATABASE_URL` en `.env`, por ejemplo:
+La URL y clave pública de Supabase Auth no permiten conectarse por SQL.
+En **Connect → Transaction pooler**, copia la conexión PostgreSQL y guárdala
+como `DATABASE_URL` en las variables sensibles de Vercel o en un `.env` local
+ignorado por Git. Usa TLS con verificación completa (`sslmode=verify-full`).
+El backend desactiva prepared statements para ser compatible con el pooler.
+Si el proveedor exige una CA, instala su certificado oficial y define
+`PGSSLROOTCERT`; no desactives la verificación.
 
-```dotenv
-DATABASE_URL=mysql://biem_app:CAMBIA_ESTA_CONTRASENA@127.0.0.1:3306/biem_cotiza
-```
-
-3. Revisa el esquema en [`drizzle/schema.ts`](drizzle/schema.ts) y las migraciones versionadas en [`drizzle/`](drizzle/).
-4. Ejecuta las migraciones existentes contra **una base externa nueva**:
+El esquema actual está en `drizzle/schema.ts`. Aplica solo las migraciones
+PostgreSQL nuevas de `drizzle/postgres/` a una base preparada para este proyecto:
 
 ```bash
-pnpm db:push
+pnpm db:migrate
 ```
 
-`pnpm db:push` ejecuta `drizzle-kit generate && drizzle-kit migrate`. Para cambios futuros, genera y versiona una migración nueva; no edites `0000_elite_eternals.sql` ni `0001_first_apocalypse.sql` después de aplicar una base compartida.
+Las migraciones MySQL originales en `drizzle/` se conservan como historial y
+no se ejecutan con la configuración actual. No se han transferido datos reales
+desde Manus. Las diez tablas nuevas usan el esquema privado `biem`, con RLS
+habilitado. El backend conecta como propietario de ese esquema; no expongas
+`biem` mediante el Data API de Supabase ni distribuyas la conexión SQL al cliente.
 
-> No copies ni conectes de forma accidental la `DATABASE_URL` administrada por Manus. Esta exportación solo contiene estructura, no datos reales.
+Para validar una base de pruebas PostgreSQL real, usa `DATABASE_TEST_URL`
+con una conexión loopback a una base aislada cuyo nombre termine en `_test`:
+
+```bash
+DATABASE_TEST_URL=postgresql://postgres@127.0.0.1:54329/rindea_test pnpm test
+```
+
+La suite de integración limpia datos en esa base de pruebas. Sin esa variable,
+las pruebas PostgreSQL se omiten explícitamente; las demás pruebas sí se ejecutan.
 
 ## Desarrollo
 
-Una vez configuradas una base MySQL externa y la autenticación externa:
+Una vez configuradas una base PostgreSQL de Supabase y la autenticación externa:
 
 ```bash
 pnpm dev
@@ -113,7 +126,7 @@ Configura `APP_PUBLIC_ORIGIN` con el origen HTTPS exacto de la web (sin barra
 final) para CORS y la redirección posterior al login. Deja
 `EXPO_PUBLIC_API_BASE_URL` sin definir para usar el API del mismo dominio;
 si despliegas el API por separado, define esta variable antes de compilar.
-El login usa Supabase Auth y requiere un secreto de sesión y MySQL;
+El login usa Supabase Auth y requiere un secreto de sesión y PostgreSQL;
 publicar el API no sustituye esos requisitos. Introduce las
 credenciales en las variables de entorno de Vercel, nunca en Git.
 
@@ -134,7 +147,7 @@ web requiere validación contra tus servicios reales antes de considerarse lista
 Los datos comerciales siguen en el navegador, ahora separados por workspace.
 Los datos anteriores de `biem-cotiza-state-v1` se conservan, sin importarlos
 automáticamente en una cuenta. La sincronización de catálogo, clientes y
-cotizaciones con MySQL sigue pendiente de Fase 2. La autenticación nativa de
+cotizaciones con PostgreSQL sigue pendiente de Fase 2. La autenticación nativa de
 Expo requiere una adaptación posterior; este cambio prepara el acceso web.
 
 La regla que debe preservarse es:
@@ -156,7 +169,7 @@ El commit `58f3239` contiene la última mejora funcional confirmada de Fase 1. L
 Para empezar Fase 2 en Codex:
 
 1. Lee `docs/manus-to-codex-migration.md` y `docs/multiuser-sync-architecture.md`.
-2. Configura Supabase Auth y MySQL externo en un entorno aislado.
+2. Configura Supabase Auth y PostgreSQL de Supabase en un entorno aislado.
 3. Implementa repositorios y routers tRPC por workspace para productos, clientes, cotizaciones, ítems y perfil comercial.
 4. Cambia `lib/biem/store.tsx` para que consulte y mutacione el API, conservando `AsyncStorage` únicamente como fuente de migración voluntaria y respaldo local temporal.
 5. Implementa la vista previa, importación idempotente y reanudable de datos locales sin importar las muestras `initialData`.
@@ -176,8 +189,8 @@ bash scripts/create-codex-export.sh ../export-biem-cotiza
 ## Seguridad básica para el repositorio privado
 
 - Mantén `.env` fuera de Git; el `.env.example` solo admite marcadores de posición.
-- Rota y define fuera del código el secreto de sesión, la URL de MySQL y las claves de proveedores.
-- Conserva MySQL en una red privada, con TLS cuando el proveedor lo permita, y copias de seguridad verificables.
+- Rota y define fuera del código el secreto de sesión, la URL de PostgreSQL y las claves de proveedores.
+- Conserva PostgreSQL en una red privada, con TLS cuando el proveedor lo permita, y copias de seguridad verificables.
 - Antes de desplegar, configura cookies `HttpOnly`, `Secure` y `SameSite` conforme al dominio final y habilita CORS solo para los orígenes web autorizados.
 - Revisa la matriz de sustituciones de Manus antes de exponer rutas de almacenamiento, IA, voz o notificaciones.
 
