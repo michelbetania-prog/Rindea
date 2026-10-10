@@ -30,9 +30,8 @@ const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "BIEM Cotiza",
   appSlug: "biemcotiza",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
-  // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  // Durable project-logo metadata. Native bundles still use assets/images/icon.png.
+  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663488441868/xTQuHndVlhKyicwJ.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -107,6 +106,7 @@ const config: ExpoConfig = {
   plugins: [
     "expo-asset",
     "expo-router",
+    "expo-sharing",
     [
       "expo-audio",
       {
@@ -126,9 +126,9 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#111827",
         dark: {
-          backgroundColor: "#000000",
+          backgroundColor: "#111827",
         },
       },
     ],
